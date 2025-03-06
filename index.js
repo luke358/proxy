@@ -38,7 +38,7 @@ function checkWhitelist(req, res, next) {
 
 // })
 
-app.use('/proxy', async (req, res) => {
+app.use('/proxy', checkWhitelist, async (req, res) => {
   const { name, url } = req.query;
 
   if (!name || !url || !proxyPool[name]) {
