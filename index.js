@@ -34,19 +34,41 @@ function checkWhitelist(req, res, next) {
   next();
 }
 
-Object.keys(proxyPool).forEach((key) => {
-  app.use(`/${key}`, checkWhitelist, (req, res, next) => {
-    const targetUrl = proxyPool[key];
-    console.log("代理接口到：", targetUrl);
-    const proxy = createProxyMiddleware({
-      target: targetUrl,
-      changeOrigin: true, // 改变源请求的 origin
-      logLevel: 'debug', // 日志级别
-      timeout: 5000, // 设置代理超时时间（5秒）
+// Object.keys(proxyPool).forEach((key) => {
+
+// })
+
+app.use('/proxy', async (req, res) => {
+  const { name, url } = req.query;
+
+  if (!name || !url || !proxyPool[name]) {
+    return res.status(400).send('error: invalid request');
+  }
+
+  try {
+    console.log(`代理请求到: ${url}`);
+
+    const fetchResponse = await fetch(url, {
+      method: req.method,
+      headers: {
+        ...req.headers,
+        host: new URL(url).host
+      },
+      body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined
     });
-    proxy(req, res, next);
-  })
-})
+
+    // 设置 HTTP 响应状态和 headers
+    res.status(fetchResponse.status);
+    fetchResponse.headers.forEach((value, key) => res.setHeader(key, value));
+
+    // ✅ 解决流传输问题
+    const body = await fetchResponse.text(); // 或者用 .json() 解析 JSON 数据
+    res.send(body);
+  } catch (error) {
+    console.error('代理请求失败:', error);
+    res.status(500).send('代理请求失败');
+  }
+});
 
 // 自定义接口 1：健康检查
 app.get('/ping', (req, res) => {
