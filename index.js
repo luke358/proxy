@@ -1,5 +1,4 @@
 import express from 'express';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 import bodyParser from 'body-parser';
 
 const { json } = bodyParser;
@@ -34,10 +33,6 @@ function checkWhitelist(req, res, next) {
   next();
 }
 
-// Object.keys(proxyPool).forEach((key) => {
-
-// })
-
 app.use('/proxy', checkWhitelist, async (req, res) => {
   const { name, url } = req.query;
 
@@ -61,7 +56,6 @@ app.use('/proxy', checkWhitelist, async (req, res) => {
     res.status(fetchResponse.status);
     fetchResponse.headers.forEach((value, key) => res.setHeader(key, value));
 
-    // ✅ 解决流传输问题
     const body = await fetchResponse.text(); // 或者用 .json() 解析 JSON 数据
     res.send(body);
   } catch (error) {
@@ -77,6 +71,19 @@ app.get('/ping', (req, res) => {
 
 // 启动服务器
 const port = 6602;
-app.listen(port, () => {
+app.listen(port, async () => {
   console.log(`代理服务器已启动，监听端口 ${port}`);
+  // TODO: register to proxy pool
+  for (const ip of whitelist.filter(item => item !== '127.0.0.1')) {
+    try {
+      const response = await fetch(`http://${ip}:6602/ping`);
+      if (response.ok) {
+        console.log(`已成功注册到代理池:${ip}`);
+      } else {
+        console.error(`注册到代理池失败：${ip}`);
+      }
+    } catch (error) {
+      console.error(`注册到代理池失败：${ip}`);
+    }
+  }
 });
