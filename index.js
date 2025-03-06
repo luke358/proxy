@@ -8,6 +8,13 @@ const app = express();
 
 app.use(json());
 
+const proxyPool = {
+  'binanceFutures': 'https://fapi.binance.com/fapi/v1/klines',
+  'binance': 'https://api.binance.com/api/v3/klines',
+  'okx': 'https://www.okx.com/api/v5/market/candles'
+};
+
+
 // 获取白名单
 const whitelist = process.env.WHITELIST ? process.env.WHITELIST.split(',') : [];
 whitelist.push('127.0.0.1');
@@ -27,38 +34,19 @@ function checkWhitelist(req, res, next) {
   next();
 }
 
-// 代理路由
-app.use('/proxy', (req, res, next) => {
-  const targetUrl = req.query.url;
-  if (!targetUrl) {
-    console.error('无效的目标服务器名称');
-    return res.status(400).send('无效的目标服务器名称');
-  }
-
-  console.log(`请求转发到: ${targetUrl}`);
-
-  // 使用 http-proxy-middleware 进行请求转发
-  const proxy = createProxyMiddleware({
-    target: targetUrl,
-    changeOrigin: true, // 改变源请求的 origin
-    logLevel: 'debug', // 日志级别
-    timeout: 5000, // 设置代理超时时间（5秒）
-    onError: (err, req, res) => {
-      // 错误处理：如果代理请求失败，返回错误信息
-      console.error('代理请求失败:', err);
-      res.status(500).send('代理请求失败');
-    },
-    onProxyReq: (proxyReq, req, res) => {
-      console.log(`代理请求的 URL: ${req.originalUrl}`);
-    },
-    onProxyRes: (proxyRes, req, res) => {
-      console.log(`代理响应: ${proxyRes.statusCode}`);
-    }
-  });
-
-  // 执行代理请求
-  proxy(req, res, next);
-});
+Object.keys(proxyPool).forEach((key) => {
+  app.use(`/${key}`, checkWhitelist, (req, res, next) => {
+    const targetUrl = proxyPool[key];
+    console.log("代理接口到：", targetUrl);
+    const proxy = createProxyMiddleware({
+      target: targetUrl,
+      changeOrigin: true, // 改变源请求的 origin
+      logLevel: 'debug', // 日志级别
+      timeout: 5000, // 设置代理超时时间（5秒）
+    });
+    proxy(req, res, next);
+  })
+})
 
 // 自定义接口 1：健康检查
 app.get('/ping', (req, res) => {
