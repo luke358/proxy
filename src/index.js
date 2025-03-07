@@ -33,18 +33,25 @@ async function bootstrap() {
         method: req.method,
         headers: {
           ...req.headers,
-          host: new URL(url).host
+          host: new URL(url).host,
         },
-        body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined
+        body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
       });
 
       // 设置 HTTP 响应状态和 headers
       res.status(fetchResponse.status);
       fetchResponse.headers.forEach((value, key) => res.setHeader(key, value));
 
-      const body = await fetchResponse.json(); // 或者用 .json() 解析 JSON 数据
-      console.log(body)
-      res.status(200).send(body);
+      // 根据 Content-Type 处理响应体
+      const contentType = fetchResponse.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const body = await fetchResponse.json();
+        console.log(body);
+        res.status(200).send(body);
+      } else {
+        const body = await fetchResponse.text();
+        res.status(200).send(body);
+      }
     } catch (error) {
       console.error('代理请求失败:', error);
       res.status(500).send('代理请求失败');
