@@ -42,7 +42,7 @@ async function bootstrap() {
       res.status(fetchResponse.status);
       fetchResponse.headers.forEach((value, key) => res.setHeader(key, value));
 
-      const body = await fetchResponse.text(); // 或者用 .json() 解析 JSON 数据
+      const body = await fetchResponse.json(); // 或者用 .json() 解析 JSON 数据
       res.send(body);
     } catch (error) {
       console.error('代理请求失败:', error);
