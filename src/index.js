@@ -20,10 +20,8 @@ async function bootstrap() {
    * worker id
    */
   app.use('/proxy', async (req, res) => {
-    res.send("hello world");
-    return;
-    const { name, url } = req.query;
-
+    let { name, url } = req.query;
+    url = decodeURIComponent(url);
     if (!name || !url || !proxyPool[name]) {
       return res.status(400).send('error: invalid request');
     }
