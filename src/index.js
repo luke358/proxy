@@ -37,7 +37,7 @@ async function bootstrap() {
       timeout: 5000, // 设置代理超时时间（5秒）
       pathRewrite: (resPath, req) => {
         console.log(resPath)
-        return resPath
+        return resPath.replaceAll('/', '');
       },
     });
     proxyMiddleware(req, res, next);
