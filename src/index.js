@@ -42,7 +42,7 @@ async function bootstrap() {
 
       // 设置 HTTP 响应状态和 headers
       res.status(fetchResponse.status);
-      fetchResponse.headers.forEach((value, key) => res.setHeader(key, value));
+      // fetchResponse.headers.forEach((value, key) => res.setHeader(key, value));
 
       // 根据 Content-Type 处理响应体
       const contentType = fetchResponse.headers.get('content-type');
