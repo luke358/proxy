@@ -2,13 +2,14 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { checkWhitelist, whitelist } from './middleware/index.js';
-
+import { createProxyMiddleware } from 'http-proxy-middleware';
 const { json } = bodyParser;
 
 const proxyPool = {
   'binanceFutures': 'https://fapi.binance.com/fapi/v1/klines',
   'binance': 'https://api.binance.com/api/v3/klines',
-  'okx': 'https://www.okx.com/api/v5/market/candles'
+  'okx': 'https://www.okx.com/api/v5/market/candles',
+  'data': 'http://data.kernel-trading.com/ohlcv/data',
 };
 async function bootstrap() {
   const app = express();
@@ -20,44 +21,28 @@ async function bootstrap() {
    * group name
    * worker id
    */
-  app.use('/proxy', async (req, res) => {
-    let { name, url } = req.query;
-    url = decodeURIComponent(url);
-    console.log(url);
-    if (!name || !url || !proxyPool[name]) {
-      return res.status(400).send('error: invalid request');
+
+
+  // 代理路由
+  app.use('/proxy', (req, res, next) => {
+    const { group } = req.query;
+    if (!group || !proxyPool[group]) {
+      return res.status(400).json({ message: 'group is required' });
     }
 
-    try {
-      console.log(`代理请求到: ${url}`);
-
-      const fetchResponse = await fetch(url, {
-        method: req.method,
-        headers: {
-          ...req.headers,
-          host: new URL(url).host,
-        },
-        body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
-      });
-
-      // 设置 HTTP 响应状态和 headers
-      res.status(fetchResponse.status);
-      // fetchResponse.headers.forEach((value, key) => res.setHeader(key, value));
-
-      // 根据 Content-Type 处理响应体
-      const contentType = fetchResponse.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const body = await fetchResponse.json();
-        res.status(200).send(body);
-      } else {
-        const body = await fetchResponse.text();
-        res.status(200).send(body);
-      }
-    } catch (error) {
-      console.error('代理请求失败:', error);
-      res.status(500).send('代理请求失败');
-    }
+    const proxyMiddleware = createProxyMiddleware({
+      target: proxyPool[group], // 目标服务器地址
+      changeOrigin: true, // 改变源请求的 origin
+      logLevel: 'debug', // 日志级别
+      timeout: 5000, // 设置代理超时时间（5秒）
+      pathRewrite: (resPath, req) => {
+        console.log(resPath)
+        return resPath
+      },
+    });
+    proxyMiddleware(req, res, next);
   });
+
 
   // 自定义接口 1：健康检查
   app.get('/ping', (req, res) => {
