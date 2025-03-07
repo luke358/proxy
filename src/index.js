@@ -1,5 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import { checkWhitelist } from './middleware';
 
 const { json } = bodyParser;
 
@@ -13,27 +14,13 @@ const proxyPool = {
   'okx': 'https://www.okx.com/api/v5/market/candles'
 };
 
+app.use('*', checkWhitelist)
 
-// 获取白名单
-const whitelist = process.env.WHITELIST ? process.env.WHITELIST.split(',') : [];
-whitelist.push('127.0.0.1');
-
-// 检查请求来源是否在白名单中
-function checkWhitelist(req, res, next) {
-  const clientIp = req.ip || req.connection.remoteAddress;
-
-  // 清理 IPv6 地址中的前缀
-  const cleanIp = clientIp.replace(/^::ffff:/, '');
-
-  if (!whitelist.includes(cleanIp)) {
-    console.error('禁止访问：您的 IP 地址不在白名单中', cleanIp);
-    return res.status(403).send('禁止访问：您的 IP 地址不在白名单中');
-  }
-
-  next();
-}
-
-app.use('/proxy', checkWhitelist, async (req, res) => {
+/**
+ * group name
+ * worker id
+ */
+app.use('/proxy', async (req, res) => {
   const { name, url } = req.query;
 
   if (!name || !url || !proxyPool[name]) {
@@ -68,6 +55,7 @@ app.use('/proxy', checkWhitelist, async (req, res) => {
 app.get('/ping', (req, res) => {
   res.send('pong');
 });
+
 
 // 启动服务器
 const port = 6602;
