@@ -20,6 +20,8 @@ async function bootstrap() {
    * worker id
    */
   app.use('/proxy', async (req, res) => {
+    res.send("hello world");
+    return;
     const { name, url } = req.query;
 
     if (!name || !url || !proxyPool[name]) {
