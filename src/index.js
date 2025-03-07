@@ -48,11 +48,10 @@ async function bootstrap() {
       const contentType = fetchResponse.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const body = await fetchResponse.json();
-        console.log(body);
-        res.status(200).send("json");
+        res.status(200).send(body);
       } else {
         const body = await fetchResponse.text();
-        res.status(200).send("text");
+        res.status(200).send(body);
       }
     } catch (error) {
       console.error('代理请求失败:', error);
