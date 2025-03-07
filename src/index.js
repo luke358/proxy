@@ -21,23 +21,24 @@ async function bootstrap() {
    * group name
    * worker id
    */
-
-
   // 代理路由
   app.use('/proxy', (req, res, next) => {
-    const { group } = req.query;
-    if (!group || !proxyPool[group]) {
-      return res.status(400).json({ message: 'group is required' });
+    let { url } = req.query;
+    if (!url) {
+      return res.status(400).json({ message: 'url is required' });
     }
 
+    url = decodeURIComponent(url);
     const proxyMiddleware = createProxyMiddleware({
-      target: proxyPool[group], // 目标服务器地址
+      target: url, // 目标服务器地址
       changeOrigin: true, // 改变源请求的 origin
       logLevel: 'debug', // 日志级别
       timeout: 5000, // 设置代理超时时间（5秒）
       pathRewrite: (resPath, req) => {
-        console.log(resPath)
-        return resPath.replaceAll('/', '');
+        let path = resPath.replaceAll('/', '');
+        const params = new URLSearchParams(req.query);
+        params.delete('url');
+        return path.split('?')[0] + '?' + params.toString();
       },
     });
     proxyMiddleware(req, res, next);
