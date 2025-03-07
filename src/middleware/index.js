@@ -1,5 +1,5 @@
 // 获取白名单
-const whitelist = process.env.WHITELIST ? process.env.WHITELIST.split(',') : [];
+export const whitelist = process.env.WHITELIST ? process.env.WHITELIST.split(',') : [];
 whitelist.push('127.0.0.1');
 
 // 检查请求来源是否在白名单中

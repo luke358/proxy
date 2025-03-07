@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { checkWhitelist } from './middleware';
+import { checkWhitelist, whitelist } from './middleware/index.js';
 
 const { json } = bodyParser;
 
