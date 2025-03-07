@@ -11,7 +11,7 @@ const proxyPool = {
 };
 async function bootstrap() {
   const app = express();
-
+  app.use(cors())
   app.use(json());
   // app.use('*', checkWhitelist)
 
@@ -48,10 +48,10 @@ async function bootstrap() {
       if (contentType && contentType.includes('application/json')) {
         const body = await fetchResponse.json();
         console.log(body);
-        res.status(200).send(body);
+        res.status(200).send("json");
       } else {
         const body = await fetchResponse.text();
-        res.status(200).send(body);
+        res.status(200).send("text");
       }
     } catch (error) {
       console.error('代理请求失败:', error);
