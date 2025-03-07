@@ -44,7 +44,7 @@ async function bootstrap() {
 
       const body = await fetchResponse.json(); // 或者用 .json() 解析 JSON 数据
       console.log(body)
-      res.send(body);
+      res.status(200).send(body);
     } catch (error) {
       console.error('代理请求失败:', error);
       res.status(500).send('代理请求失败');
