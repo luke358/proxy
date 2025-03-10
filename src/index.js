@@ -14,7 +14,8 @@ const proxyPool = {
 async function bootstrap() {
   const app = express();
   app.use(cors())
-  app.use(json());
+  app.use(express.urlencoded({ limit: '1mb', extended: true }));
+  app.use(express.json({ limit: '1mb' }));
   // app.use('*', checkWhitelist)
 
   /**
