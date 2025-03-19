@@ -4,9 +4,9 @@ import cors from 'cors';
 import { checkWhitelist, whitelist } from './middleware/index.js';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 const { json } = bodyParser;
-import http from 'http';
+import https from 'https';
 
-const agent = new http.Agent({
+const agent = new https.Agent({
   keepAlive: true, // 复用连接
   maxSockets: 100, // 最大并发连接数
 });
