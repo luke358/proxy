@@ -31,7 +31,6 @@ async function bootstrap() {
     }
 
     url = decodeURIComponent(url);
-    console.log("代理到 url", url);
     const proxyMiddleware = proxyMiddlewareMap[url] || (proxyMiddlewareMap[url] = createProxyMiddleware({
       target: url, // 目标服务器地址
       changeOrigin: true, // 改变源请求的 origin
